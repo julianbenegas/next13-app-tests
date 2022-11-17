@@ -1,7 +1,23 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+import Image from "next/image";
+import styles from "./page.module.css";
 
-export default function Home() {
+async function getDateTimeFromAPI(requestInit: RequestInit) {
+  const res = await fetch(
+    "http://worldtimeapi.org/api/timezone/America/Argentina/Buenos_Aires",
+    requestInit
+  );
+  const data = (await res.json()) as { datetime: string };
+  return data.datetime.split(".")[0];
+}
+
+export default async function Home() {
+  const [forceCache, noCache, swr10, swr60] = await Promise.all([
+    getDateTimeFromAPI({ cache: "force-cache" }),
+    getDateTimeFromAPI({ cache: "no-cache" }),
+    getDateTimeFromAPI({ next: { revalidate: 10 } }),
+    getDateTimeFromAPI({ next: { revalidate: 60 } }),
+  ]);
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
@@ -9,35 +25,20 @@ export default function Home() {
           Welcome to <a href="https://nextjs.org">Next.js 13!</a>
         </h1>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://beta.nextjs.org/docs" className={styles.card}>
-            <h2>Documentation &rarr;</h2>
-            <p>Find in-depth information about Next.js 13</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className={styles.card}
-          >
-            <h2>Examples &rarr;</h2>
-            <p>Explore the Next.js 13 playground.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/templates/next.js/app-directory?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.card}
-          >
-            <h2>Deploy &rarr;</h2>
-            <p>Deploy your Next.js site to a public URL with Vercel.</p>
-          </a>
-        </div>
+        <pre>
+          <code>
+            {JSON.stringify(
+              {
+                forceCache,
+                noCache,
+                swr10,
+                swr60,
+              },
+              null,
+              2
+            )}
+          </code>
+        </pre>
       </main>
 
       <footer className={styles.footer}>
@@ -46,12 +47,12 @@ export default function Home() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Powered by{' '}
+          Powered by{" "}
           <span className={styles.logo}>
             <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
           </span>
         </a>
       </footer>
     </div>
-  )
+  );
 }
